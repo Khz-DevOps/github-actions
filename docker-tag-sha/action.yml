@@ -1,0 +1,27 @@
+name: "Docker Tag SHA"
+description: "Publish sha- tag"
+
+inputs:
+  registry:
+    description: "Container registry host"
+    default: cr.alkhwarizmi.online
+
+  service:
+    description: "Service name"
+    required: true
+
+  image_tag:
+    description: "Tag of the image to use"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: SHA tag
+      shell: bash
+      run: |
+        BASE=${{ inputs.registry }}/${{ inputs.service }}
+        SHORT_SHA=${GITHUB_SHA::7}
+        docker pull $BASE:${{ inputs.image_tag }}
+        docker tag $BASE:${{ inputs.image_tag }} $BASE:sha-${SHORT_SHA}
+        docker push $BASE:sha-${SHORT_SHA}

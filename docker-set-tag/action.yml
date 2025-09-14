@@ -1,0 +1,24 @@
+name: "Docker Set Tag"
+description: "Decide IMAGE_TAG based on event type and expose as env/output"
+
+outputs:
+  image_tag:
+    description: "Resolved image tag"
+    value: ${{ steps.set-tag.outputs.image_tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: set-tag
+      name: Set IMAGE_TAG
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "release" ]; then
+          IMAGE_TAG="${{ github.event.release.tag_name }}"
+        elif [[ "${GITHUB_REF_TYPE}" = "tag" && "${GITHUB_REF_NAME}" == v* ]]; then
+          IMAGE_TAG="${GITHUB_REF_NAME}"
+        else
+          IMAGE_TAG="master-${GITHUB_SHA::7}"
+        fi
+        echo "Resolved IMAGE_TAG=$IMAGE_TAG"
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
