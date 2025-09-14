@@ -1,0 +1,55 @@
+name: "Checkout Messenger Dependencies"
+description: "Checks out MessengerCore + required repos"
+
+inputs:
+  token:
+    description: "GitHub PAT with repo access"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Messenger code
+      uses: actions/checkout@v4
+      with:
+        path: MessengerCore
+
+    - name: Checkout ClassLibraryCore repo
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ClassLibraryCore
+        token: ${{ inputs.token }}
+        path: ClassLibraryCore
+        ref: master
+
+    - name: Checkout CMS-Core repo
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/CMS-Core
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/SaaS/CMS
+        ref: master
+
+    - name: Checkout Schools repo
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/School
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/SaaS/School
+        ref: master
+
+    - name: Checkout LMSPlatform repo
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/LMSPlatform
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/LMSPlatform
+        ref: master
+
+    - name: Checkout ChatBotService repo
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ChatBotService
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/ChatBotService
+        ref: master

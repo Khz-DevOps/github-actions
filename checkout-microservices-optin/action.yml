@@ -1,0 +1,90 @@
+name: "Checkout Microservices"
+description: "Checks out selected microservice repos"
+
+inputs:
+  token:
+    description: "GitHub PAT with repo access"
+    required: true
+  include_cms:
+    description: "Include CMS microservice"
+    default: "false"
+  include_schools:
+    description: "Include Schools microservice"
+    default: "false"
+  include_lms:
+    description: "Include LMS microservice"
+    default: "false"
+  include_payment:
+    description: "Include Payment microservice"
+    default: "false"
+  include_delivery:
+    description: "Include Delivery microservice"
+    default: "false"
+  include_chatbot:
+    description: "Include ChatBot microservice"
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout ClassLibraryCore
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ClassLibraryCore
+        token: ${{ inputs.token }}
+        path: ClassLibraryCore
+        ref: master
+
+    - name: Checkout CMS-Core
+      if: ${{ inputs.include_cms == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/CMS-Core
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/SaaS/CMS
+        ref: master
+
+    - name: Checkout Schools
+      if: ${{ inputs.include_schools == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/School
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/SaaS/School
+        ref: master
+
+    - name: Checkout LMSPlatform
+      if: ${{ inputs.include_lms == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/LMSPlatform
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/LMSPlatform
+        ref: master
+
+    - name: Checkout PaymentService
+      if: ${{ inputs.include_payment == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/PaymentService
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/PaymentService
+        ref: master
+
+    - name: Checkout DeliveryService
+      if: ${{ inputs.include_delivery == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/DeliveryService
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/DeliveryService
+        ref: master
+
+    - name: Checkout ChatBotService
+      if: ${{ inputs.include_chatbot == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ChatBotService
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/ChatBotService
+        ref: master
