@@ -8,7 +8,7 @@ inputs:
   image_tag:     
     description: "Tag to use for the Docker image"
     required: true
-        
+
   registry:
     description: "Container registry host"
     default: cr.alkhwarizmi.online
@@ -39,3 +39,5 @@ runs:
     - name: Push
       shell: bash
       run: docker compose -f ${{ inputs.compose-file }} push
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}

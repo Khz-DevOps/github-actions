@@ -1,5 +1,5 @@
-name: "Docker Build & Push"
-description: "Build and push Docker image"
+name: "Docker Build"
+description: "Build Docker image"
 
 inputs:
   compose-file:
