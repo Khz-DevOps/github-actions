@@ -23,10 +23,22 @@ inputs:
   include_chatbot:
     description: "Include ChatBot microservice"
     default: "true"
+  ref:
+    description: "Branch or tag to checkout"
+    default: master
+
 
 runs:
   using: "composite"
   steps:
+    - name: Checkout ClassLibraryCore
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ClassLibraryCore
+        token: ${{ inputs.token }}
+        path: ClassLibraryCore
+        ref: ${{ inputs.ref }}
+
     - name: Checkout CMS-Core
       if: ${{ inputs.include_cms == 'true' }}
       uses: actions/checkout@v4
@@ -34,7 +46,7 @@ runs:
         repository: Khz-DevOps/CMS-Core
         token: ${{ inputs.token }}
         path: MicroServicesCore/SaaS/CMS
-        ref: master
+        ref: ${{ inputs.ref }}
 
     - name: Checkout Schools
       if: ${{ inputs.include_schools == 'true' }}
@@ -43,7 +55,7 @@ runs:
         repository: Khz-DevOps/School
         token: ${{ inputs.token }}
         path: MicroServicesCore/SaaS/School
-        ref: master
+        ref: ${{ inputs.ref }}
 
     - name: Checkout LMSPlatform
       if: ${{ inputs.include_lms == 'true' }}
@@ -52,7 +64,7 @@ runs:
         repository: Khz-DevOps/LMSPlatform
         token: ${{ inputs.token }}
         path: MicroServicesCore/LMSPlatform
-        ref: master
+        ref: ${{ inputs.ref }}
 
     - name: Checkout PaymentService
       if: ${{ inputs.include_payment == 'true' }}
@@ -61,7 +73,7 @@ runs:
         repository: Khz-DevOps/PaymentService
         token: ${{ inputs.token }}
         path: MicroServicesCore/PaymentService
-        ref: master
+        ref: ${{ inputs.ref }}
 
     - name: Checkout DeliveryService
       if: ${{ inputs.include_delivery == 'true' }}
@@ -70,7 +82,7 @@ runs:
         repository: Khz-DevOps/DeliveryService
         token: ${{ inputs.token }}
         path: MicroServicesCore/DeliveryService
-        ref: master
+        ref: ${{ inputs.ref }}
 
     - name: Checkout ChatBotService
       if: ${{ inputs.include_chatbot == 'true' }}
@@ -79,4 +91,4 @@ runs:
         repository: Khz-DevOps/ChatBotService
         token: ${{ inputs.token }}
         path: MicroServicesCore/ChatBotService
-        ref: master
+        ref: ${{ inputs.ref }}
