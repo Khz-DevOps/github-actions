@@ -5,6 +5,10 @@ inputs:
   compose-file:
     description: "Path to the Docker Compose file"
     required: true
+  image_tag:     
+    description: "Tag to use for the Docker image"
+    required: true
+        
   registry:
     description: "Container registry host"
     default: cr.alkhwarizmi.online
@@ -29,6 +33,8 @@ runs:
     - name: Build
       shell: bash
       run: docker compose -f ${{ inputs.compose-file }} build --progress=plain
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}
 
     - name: Push
       shell: bash
