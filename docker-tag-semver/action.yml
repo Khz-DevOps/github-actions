@@ -22,13 +22,14 @@ runs:
       shell: bash
       run: |
         BASE=${{ inputs.registry }}/${{ inputs.service }}
-        FULL=${{ inputs.image_tag#v }}
-        MAJ=${FULL%%.*}
-        MIN=${FULL%.*}
-        docker pull $BASE:${{ inputs.image_tag }}
-        docker tag $BASE:${{ inputs.image_tag }} $BASE:${FULL}
-        docker tag $BASE:${{ inputs.image_tag }} $BASE:${MIN}
-        docker tag $BASE:${{ inputs.image_tag }} $BASE:${MAJ}
-        docker push $BASE:${FULL}
-        docker push $BASE:${MIN}
-        docker push $BASE:${MAJ}
+        TAG="${{ inputs.image_tag }}"   # e.g. v1.2.3
+        FULL="${TAG#v}"                 # remove leading v → 1.2.3
+        MAJ="${FULL%%.*}"               # → 1
+        MIN="${FULL%.*}"                 # → 1.2
+        docker pull $BASE:$TAG
+        docker tag $BASE:$TAG $BASE:$FULL
+        docker tag $BASE:$TAG $BASE:$MIN
+        docker tag $BASE:$TAG $BASE:$MAJ
+        docker push $BASE:$FULL
+        docker push $BASE:$MIN
+        docker push $BASE:$MAJ
