@@ -1,0 +1,59 @@
+name: "Deploy Kustomize via SSH"
+description: "Update kustomize image tag for a service then kubectl apply -k"
+
+inputs:
+  host: { required: true }
+  username: { required: true }
+  key: { required: true }
+  port: { required: false, default: "22" }
+
+  repo_dir:
+    required: false
+    description: "Remote repo directory that contains k8s/"
+    default: "/home/ubuntu/DockerInfra"
+    
+  overlay_dir:
+    required: false
+    description: "Overlay dir path relative to repo_dir (e.g. k8s/overlays/aws-test)"
+    default: "k8s/overlays/aws-test"
+
+  namespace:
+    required: false
+    description: "Kubernetes namespace (e.g. apps-aws-test)"
+    default: "apps-aws-test"
+
+  image_name:
+    required: true
+    description: "Full image name used in kustomization (e.g. cr.alkhwarizmi.online/paymentservice)"
+  
+  image_tag:
+    required: true
+    description: "New tag"
+  
+  deployment_name:
+    required: false
+    description: "Deployment name for rollout status (optional)"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        port: ${{ inputs.port }}
+        script: |
+          set -e
+          cd "${{ inputs.repo_dir }}"
+
+          cd "${{ inputs.overlay_dir }}"
+          kustomize edit set image ${{ inputs.image_name }}=${{ inputs.image_name }}:${{ inputs.image_tag }}
+
+          cd - >/dev/null
+          kubectl apply -k "${{ inputs.overlay_dir }}"
+
+          if [ -n "${{ inputs.deployment_name }}" ]; then
+            kubectl -n "${{ inputs.namespace }}" rollout status deploy/${{ inputs.deployment_name }} --timeout=180s
+          fi
