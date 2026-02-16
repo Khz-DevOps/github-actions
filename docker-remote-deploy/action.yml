@@ -1,0 +1,64 @@
+name: "Deploy via SSH (DockerInfra update override)"
+description: "Deploy a service on a remote host by running update-ovveride.sh with DEPLOY_ENV and RELEASE_TAG"
+
+inputs:
+  host:
+    description: "SSH host"
+    required: true
+  username:
+    description: "SSH username"
+    required: true
+  key:
+    description: "SSH private key"
+    required: true
+
+  port:
+    description: "SSH port"
+    required: false
+    default: "22"
+
+  scripts_dir:
+    description: "Remote directory where update script exists"
+    required: false
+    default: "/home/ubuntu/DockerInfra/docker_compose/scripts"
+
+  update_script:
+    description: "Update script name/path relative to scripts_dir"
+    required: false
+    default: "./update.sh"
+
+  deploy_env:
+    description: "Deployment environment (DEPLOY_ENV)"
+    required: true
+
+  release_tag:
+    description: "Release tag (RELEASE_TAG)"
+    required: true
+
+  service:
+    description: "Service name to pass to update script"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        port: ${{ inputs.port }}
+        script: |
+          set -e
+
+          TAG="${{ inputs.release_tag }}"
+          ENV="${{ inputs.deploy_env }}"
+          SERVICE="${{ inputs.service }}"
+          SCRIPTS_DIR="${{ inputs.scripts_dir }}"
+          UPDATE_SCRIPT="${{ inputs.update_script }}"
+
+          echo "Deploying ${SERVICE} with tag: ${TAG} to env: ${ENV}"
+          cd "${SCRIPTS_DIR}"
+
+          DEPLOY_ENV="${ENV}" RELEASE_TAG="${TAG}" ${UPDATE_SCRIPT} "${SERVICE}"
