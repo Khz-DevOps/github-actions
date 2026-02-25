@@ -25,6 +25,10 @@ inputs:
   image_name:
     required: true
     description: "Full image name used in kustomization (e.g. cr.alkhwarizmi.online/paymentservice)"
+
+  target_image_name:
+    required: false
+    description: "Optional actual image name to set as kustomize newName (defaults to image_name)"
   
   image_tag:
     required: true
@@ -46,10 +50,14 @@ runs:
         port: ${{ inputs.port }}
         script: |
           set -e
+          TARGET_IMAGE="${{ inputs.target_image_name }}"
+          if [ -z "$TARGET_IMAGE" ]; then
+            TARGET_IMAGE="${{ inputs.image_name }}"
+          fi
           cd "${{ inputs.repo_dir }}"
 
           cd "${{ inputs.overlay_dir }}"
-          kustomize edit set image ${{ inputs.image_name }}=${{ inputs.image_name }}:${{ inputs.image_tag }}
+          kustomize edit set image ${{ inputs.image_name }}=$TARGET_IMAGE:${{ inputs.image_tag }}
 
           cd - >/dev/null
           kubectl apply -k "${{ inputs.overlay_dir }}"
