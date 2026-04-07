@@ -1,0 +1,67 @@
+name: "Deploy Kustomize via SSH (Windows)"
+description: "Update kustomize image tag for a service then kubectl apply -k (PowerShell on remote)"
+
+inputs:
+  host: { required: true }
+  username: { required: true }
+  key: { required: true }
+  port: { required: false, default: "22" }
+
+  repo_dir:
+    required: true
+    description: "DockerInfra repo root on the Windows host (e.g. C:\\src\\Websites\\GitHub\\DockerInfra)"
+
+  overlay_dir:
+    required: false
+    description: "Overlay path relative to repo_dir (e.g. k8s/overlays/aws-eks)"
+    default: "k8s/overlays/aws-test"
+
+  namespace:
+    required: false
+    description: "Kubernetes namespace (e.g. apps-aws-eks)"
+    default: "apps-aws-test"
+
+  image_name:
+    required: true
+    description: "Full image name used in kustomization (e.g. cr.alkhwarizmi.online/paymentservice)"
+
+  target_image_name:
+    required: false
+    description: "Optional actual image name to set as kustomize newName (defaults to image_name)"
+
+  image_tag:
+    required: true
+    description: "New tag"
+
+  deployment_name:
+    required: false
+    description: "Deployment name for rollout status (optional)"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.username }}
+        key: ${{ inputs.key }}
+        port: ${{ inputs.port }}
+        script_stop: true
+        script: |
+          $ErrorActionPreference = 'Stop'
+          $repo = '${{ inputs.repo_dir }}'
+          $overlayRel = '${{ inputs.overlay_dir }}'
+          $targetImage = '${{ inputs.target_image_name }}'
+          if ([string]::IsNullOrWhiteSpace($targetImage)) { $targetImage = '${{ inputs.image_name }}' }
+          $overlayFull = Join-Path $repo $overlayRel
+          Set-Location $overlayFull
+          $spec = '${{ inputs.image_name }}=' + $targetImage + ':${{ inputs.image_tag }}'
+          & kustomize edit set image $spec
+          Set-Location $repo
+          $applyPath = ($overlayRel -replace '\\', '/')
+          & kubectl apply -k $applyPath
+          $dn = '${{ inputs.deployment_name }}'
+          if (-not [string]::IsNullOrWhiteSpace($dn)) {
+            & kubectl -n '${{ inputs.namespace }}' rollout status "deploy/$dn" --timeout=180s
+          }
