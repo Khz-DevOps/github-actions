@@ -38,6 +38,11 @@ inputs:
     required: false
     description: "Deployment name for rollout status (optional)"
 
+  lock_timeout_seconds:
+    required: false
+    description: "How long to wait for overlay deploy lock"
+    default: "300"
+
 runs:
   using: "composite"
   steps:
@@ -54,14 +59,21 @@ runs:
           if [ -z "$TARGET_IMAGE" ]; then
             TARGET_IMAGE="${{ inputs.image_name }}"
           fi
-          cd "${{ inputs.repo_dir }}"
+          LOCK_DIR="/tmp/docker-remote-k8s-deploy-locks"
+          mkdir -p "$LOCK_DIR"
+          SAFE_OVERLAY="$(echo "${{ inputs.overlay_dir }}" | tr '/:' '__')"
+          LOCK_FILE="$LOCK_DIR/${SAFE_OVERLAY}.lock"
 
-          cd "${{ inputs.overlay_dir }}"
-          kustomize edit set image ${{ inputs.image_name }}=$TARGET_IMAGE:${{ inputs.image_tag }}
+          (
+            flock -w "${{ inputs.lock_timeout_seconds }}" 9
 
-          cd - >/dev/null
-          kubectl apply -k "${{ inputs.overlay_dir }}"
+            cd "${{ inputs.repo_dir }}"
+            cd "${{ inputs.overlay_dir }}"
+            kustomize edit set image ${{ inputs.image_name }}=$TARGET_IMAGE:${{ inputs.image_tag }}
+            cd - >/dev/null
 
-          if [ -n "${{ inputs.deployment_name }}" ]; then
-            kubectl -n "${{ inputs.namespace }}" rollout status deploy/${{ inputs.deployment_name }} --timeout=180s
-          fi
+            kubectl apply -k "${{ inputs.overlay_dir }}"
+            if [ -n "${{ inputs.deployment_name }}" ]; then
+              kubectl -n "${{ inputs.namespace }}" rollout status deploy/${{ inputs.deployment_name }} --timeout=180s
+            fi
+          ) 9>"$LOCK_FILE"
