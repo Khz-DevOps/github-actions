@@ -102,5 +102,5 @@ runs:
       with:
         repository: Khz-DevOps/saas.api
         token: ${{ inputs.token }}
-        path: AI-Tools
+        path: AI-Tools/saas.api
         ref: ${{ inputs.ref }}
