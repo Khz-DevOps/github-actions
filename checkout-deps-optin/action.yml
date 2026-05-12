@@ -23,6 +23,9 @@ inputs:
   include_chatbot:
     description: "Include ChatBot microservice"
     default: "false"
+  include_saas_api:
+    description: "Include SaaS API microservice"
+    default: "false"
   ref:
     description: "Branch or tag to checkout"
     default: master
@@ -91,4 +94,13 @@ runs:
         repository: Khz-DevOps/ChatBotService
         token: ${{ inputs.token }}
         path: MicroServicesCore/ChatBotService
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SaaS API
+      if: ${{ inputs.include_saas_api == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/saas.api
+        token: ${{ inputs.token }}
+        path: AI-Tools
         ref: ${{ inputs.ref }}
