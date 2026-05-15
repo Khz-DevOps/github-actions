@@ -1,0 +1,55 @@
+name: "Docker GitOps Deploy"
+description: "Update image tag in DockerInfra overlay and push — ArgoCD picks it up automatically"
+
+inputs:
+  token:
+    description: "GitHub PAT with push access to DockerInfra"
+    required: true
+  overlay_dir:
+    description: "Overlay path inside DockerInfra (e.g. k8s/overlays/aws-test)"
+    required: true
+  image_name:
+    description: "Image name key in kustomization.yaml"
+    required: true
+  target_image_name:
+    description: "Actual image to pull — set when image_name is an alias (e.g. newapigetway pulls apigetway). Defaults to image_name."
+    required: false
+    default: ""
+  image_tag:
+    description: "New tag to set"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout DockerInfra
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/DockerInfra
+        token: ${{ inputs.token }}
+        path: DockerInfra
+
+    - name: Update image tag
+      shell: bash
+      run: |
+        TARGET="${{ inputs.target_image_name }}"
+        if [ -z "$TARGET" ]; then
+          TARGET="${{ inputs.image_name }}"
+        fi
+        cd DockerInfra/${{ inputs.overlay_dir }}
+        kustomize edit set image ${{ inputs.image_name }}=${TARGET}:${{ inputs.image_tag }}
+
+    - name: Commit and push
+      shell: bash
+      run: |
+        cd DockerInfra
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git add ${{ inputs.overlay_dir }}/kustomization.yaml
+        git diff --staged --quiet && echo "No changes to commit" && exit 0
+        git commit -m "deploy: ${{ inputs.image_name }} → ${{ inputs.image_tag }}"
+        for i in 1 2 3; do
+          git push && break
+          echo "Push attempt $i failed, rebasing..."
+          git pull --rebase origin master
+        done
