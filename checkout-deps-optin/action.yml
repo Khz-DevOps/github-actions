@@ -26,6 +26,9 @@ inputs:
   include_saas_api:
     description: "Include SaaS API microservice"
     default: "false"
+  include_contact_center:
+    description: "Include Contact Center microservice"
+    default: "false"
   ref:
     description: "Branch or tag to checkout"
     default: master
@@ -103,4 +106,13 @@ runs:
         repository: Khz-DevOps/saas.api
         token: ${{ inputs.token }}
         path: AI-Tools/saas.api
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout Contact Center
+      if: ${{ inputs.include_contact_center == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/Contact-Center
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/Contact-Center
         ref: ${{ inputs.ref }}
