@@ -47,7 +47,7 @@ runs:
         git config user.name "github-actions[bot]"
         git add ${{ inputs.overlay_dir }}/kustomization.yaml
         git diff --staged --quiet && echo "No changes to commit" && exit 0
-        git commit -m "deploy: ${{ inputs.image_name }} → ${{ inputs.image_tag }}"
+        git commit -m "deploy: ${{ inputs.image_name }} → ${{ inputs.overlay_dir }} → ${{ inputs.image_tag }}"
         for i in 1 2 3; do
           git push && break
           echo "Push attempt $i failed, rebasing..."
