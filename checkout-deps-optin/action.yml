@@ -29,6 +29,9 @@ inputs:
   include_contact_center:
     description: "Include Contact Center microservice"
     default: "false"
+  include_livechatcore:
+    description: "Include LiveChatCore microservice"
+    default: "false"
   ref:
     description: "Branch or tag to checkout"
     default: master
@@ -115,4 +118,13 @@ runs:
         repository: Khz-DevOps/Contact-Center
         token: ${{ inputs.token }}
         path: MicroServicesCore/Contact-Center
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout LiveChatCore
+      if: ${{ inputs.include_livechatcore == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/LiveChatCore
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/LiveChatCore
         ref: ${{ inputs.ref }}
