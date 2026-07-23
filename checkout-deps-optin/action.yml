@@ -115,9 +115,9 @@ runs:
       if: ${{ inputs.include_contact_center == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/Contact-Center
+        repository: Khz-DevOps/contact-center.web
         token: ${{ inputs.token }}
-        path: MicroServicesCore/Contact-Center
+        path: MicroServicesCore/contact-center.web
         ref: ${{ inputs.ref }}
 
     - name: Checkout LiveChatCore
