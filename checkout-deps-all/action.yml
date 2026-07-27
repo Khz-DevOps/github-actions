@@ -23,6 +23,15 @@ inputs:
   include_chatbot:
     description: "Include ChatBot microservice"
     default: "true"
+  include_saas_api:
+    description: "Include SaaS API microservice"
+    default: "true"
+  include_contact_center:
+    description: "Include Contact Center microservice"
+    default: "true"
+  include_livechatcore:
+    description: "Include LiveChatCore microservice"
+    default: "true"
   ref:
     description: "Branch or tag to checkout"
     default: master
@@ -91,4 +100,31 @@ runs:
         repository: Khz-DevOps/ChatBotService
         token: ${{ inputs.token }}
         path: MicroServicesCore/ChatBotService
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SaaS API
+      if: ${{ inputs.include_saas_api == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/saas.api
+        token: ${{ inputs.token }}
+        path: AI-Tools/saas.api
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout Contact Center
+      if: ${{ inputs.include_contact_center == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/contact-center.web
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/contact-center.web
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout LiveChatCore
+      if: ${{ inputs.include_livechatcore == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/LiveChatCore
+        token: ${{ inputs.token }}
+        path: MicroServicesCore/LiveChatCore
         ref: ${{ inputs.ref }}
