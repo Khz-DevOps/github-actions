@@ -66,13 +66,13 @@ runs:
         path: MicroServicesCore/SaaS/School
         ref: ${{ inputs.ref }}
 
-    - name: Checkout LMSPlatform
+    - name: Checkout LMS
       if: ${{ inputs.include_lms == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/LMSPlatform
+        repository: Khz-DevOps/LMS
         token: ${{ inputs.token }}
-        path: MicroServicesCore/LMSPlatform
+        path: MicroServicesCore/SaaS/LMS
         ref: ${{ inputs.ref }}
 
     - name: Checkout PaymentService
