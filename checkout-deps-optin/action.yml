@@ -1,96 +1,154 @@
-name: "Checkout Microservices"
-description: "Checks out selected microservice repos"
+name: "Checkout Dependencies (opt-in)"
+description: "Checks out selected workspace repos into their canonical paths (matches RepoOps-Scripts/repos-index.json)"
 
 inputs:
   token:
     description: "GitHub PAT with repo access"
     required: true
-  include_cms:
-    description: "Include CMS microservice"
-    default: "false"
-  include_schools:
-    description: "Include Schools microservice"
-    default: "false"
-  include_lms:
-    description: "Include LMS microservice"
-    default: "false"
-  include_payment:
-    description: "Include Payment microservice"
-    default: "false"
-  include_delivery:
-    description: "Include Delivery microservice"
-    default: "false"
-  include_chatbot:
-    description: "Include ChatBot microservice"
-    default: "false"
-  include_saas_api:
-    description: "Include SaaS API microservice"
-    default: "false"
-  include_contact_center:
-    description: "Include Contact Center microservice"
-    default: "false"
-  include_livechatcore:
-    description: "Include LiveChatCore microservice"
-    default: "false"
   ref:
     description: "Branch or tag to checkout"
     default: master
+
+  include_contact_center_accounts:
+    description: "Include Contact-Center-Accounts (AdminPortals/Contact-Center-Accounts)"
+    default: "false"
+
+  include_channel_gateway:
+    description: "Include ChannelGateway (Gateways/ChannelGateway)"
+    default: "false"
+  include_saas_gateway:
+    description: "Include SaasGateway (Gateways/SaasGateway)"
+    default: "false"
+  include_weborder_gateway:
+    description: "Include WebOrderGateway (Gateways/WebOrderGateway)"
+    default: "false"
+
+  include_agent_context:
+    description: "Include agent-context (GitHub/agent-context)"
+    default: "false"
+  include_docker_infra:
+    description: "Include DockerInfra (GitHub/DockerInfra)"
+    default: "false"
+  include_github_actions:
+    description: "Include github-actions (GitHub/github-actions)"
+    default: "false"
+  include_repoops_scripts:
+    description: "Include RepoOps-Scripts (GitHub/RepoOps-Scripts)"
+    default: "false"
+
+  include_chatbot:
+    description: "Include ChatBotService (MicroServices/ChatBotService)"
+    default: "false"
+  include_contact_center_web:
+    description: "Include contact-center.web (MicroServices/contact-center.web)"
+    default: "false"
+  include_delivery:
+    description: "Include DeliveryService (MicroServices/DeliveryService)"
+    default: "false"
+  include_livechat:
+    description: "Include LiveChat (MicroServices/LiveChat)"
+    default: "false"
+  include_payment:
+    description: "Include PaymentService (MicroServices/PaymentService)"
+    default: "false"
+  include_resource_management:
+    description: "Include ResourceManagementCore (MicroServices/ResourceManagementCore)"
+    default: "false"
+  include_saas_integration:
+    description: "Include SaasIntegration (MicroServices/SaasIntegration)"
+    default: "false"
+
+  include_ehc_mw:
+    description: "Include EHC-MW (MiddleWares/EHC-MW)"
+    default: "false"
+  include_jazan_mw:
+    description: "Include JazanMW (MiddleWares/JazanMW)"
+    default: "false"
+
+  include_saas_middleware:
+    description: "Include SaasMiddleWare (SaasMiddleWare)"
+    default: "false"
+  include_saas_platform:
+    description: "Include SassPlatform (SassPlatform)"
+    default: "false"
+  include_shared_class_libs:
+    description: "Include SharedClassLibs (SharedClassLibs)"
+    default: "false"
 
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout ClassLibraryCore
+    - name: Checkout Contact-Center-Accounts
+      if: ${{ inputs.include_contact_center_accounts == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/ClassLibraryCore
+        repository: Khz-DevOps/contact-center-accounts
         token: ${{ inputs.token }}
-        path: ClassLibraryCore
+        path: AdminPortals/Contact-Center-Accounts
         ref: ${{ inputs.ref }}
 
-    - name: Checkout CMS-Core
-      if: ${{ inputs.include_cms == 'true' }}
+    - name: Checkout ChannelGateway
+      if: ${{ inputs.include_channel_gateway == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/CMS-Core
+        repository: Khz-DevOps/ChannelGateway
         token: ${{ inputs.token }}
-        path: MicroServicesCore/SaaS/CMS
+        path: Gateways/ChannelGateway
         ref: ${{ inputs.ref }}
 
-    - name: Checkout Schools
-      if: ${{ inputs.include_schools == 'true' }}
+    - name: Checkout SaasGateway
+      if: ${{ inputs.include_saas_gateway == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/School
+        repository: Khz-DevOps/SaasGateway
         token: ${{ inputs.token }}
-        path: MicroServicesCore/SaaS/School
+        path: Gateways/SaasGateway
         ref: ${{ inputs.ref }}
 
-    - name: Checkout LMS
-      if: ${{ inputs.include_lms == 'true' }}
+    - name: Checkout WebOrderGateway
+      if: ${{ inputs.include_weborder_gateway == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/LMS
+        repository: Khz-DevOps/WebOrderGateway
         token: ${{ inputs.token }}
-        path: MicroServicesCore/SaaS/LMS
+        path: Gateways/WebOrderGateway
         ref: ${{ inputs.ref }}
 
-    - name: Checkout PaymentService
-      if: ${{ inputs.include_payment == 'true' }}
+    - name: Checkout agent-context
+      if: ${{ inputs.include_agent_context == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/PaymentService
+        repository: Khz-DevOps/agent-context
         token: ${{ inputs.token }}
-        path: MicroServicesCore/PaymentService
+        path: GitHub/agent-context
         ref: ${{ inputs.ref }}
 
-    - name: Checkout DeliveryService
-      if: ${{ inputs.include_delivery == 'true' }}
+    - name: Checkout DockerInfra
+      if: ${{ inputs.include_docker_infra == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/DeliveryService
+        repository: Khz-DevOps/DockerInfra
         token: ${{ inputs.token }}
-        path: MicroServicesCore/DeliveryService
+        path: GitHub/DockerInfra
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout github-actions
+      if: ${{ inputs.include_github_actions == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/github-actions
+        token: ${{ inputs.token }}
+        path: GitHub/github-actions
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout RepoOps-Scripts
+      if: ${{ inputs.include_repoops_scripts == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/RepoOps-Scripts
+        token: ${{ inputs.token }}
+        path: GitHub/RepoOps-Scripts
         ref: ${{ inputs.ref }}
 
     - name: Checkout ChatBotService
@@ -99,32 +157,104 @@ runs:
       with:
         repository: Khz-DevOps/ChatBotService
         token: ${{ inputs.token }}
-        path: MicroServicesCore/ChatBotService
+        path: MicroServices/ChatBotService
         ref: ${{ inputs.ref }}
 
-    - name: Checkout SaaS API
-      if: ${{ inputs.include_saas_api == 'true' }}
-      uses: actions/checkout@v4
-      with:
-        repository: Khz-DevOps/saas.api
-        token: ${{ inputs.token }}
-        path: AI-Tools/saas.api
-        ref: ${{ inputs.ref }}
-
-    - name: Checkout Contact Center
-      if: ${{ inputs.include_contact_center == 'true' }}
+    - name: Checkout contact-center.web
+      if: ${{ inputs.include_contact_center_web == 'true' }}
       uses: actions/checkout@v4
       with:
         repository: Khz-DevOps/contact-center.web
         token: ${{ inputs.token }}
-        path: MicroServicesCore/contact-center.web
+        path: MicroServices/contact-center.web
         ref: ${{ inputs.ref }}
 
-    - name: Checkout LiveChatCore
-      if: ${{ inputs.include_livechatcore == 'true' }}
+    - name: Checkout DeliveryService
+      if: ${{ inputs.include_delivery == 'true' }}
       uses: actions/checkout@v4
       with:
-        repository: Khz-DevOps/LiveChatCore
+        repository: Khz-DevOps/DeliveryService
         token: ${{ inputs.token }}
-        path: MicroServicesCore/LiveChatCore
+        path: MicroServices/DeliveryService
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout LiveChat
+      if: ${{ inputs.include_livechat == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/LiveChat
+        token: ${{ inputs.token }}
+        path: MicroServices/LiveChat
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout PaymentService
+      if: ${{ inputs.include_payment == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/PaymentService
+        token: ${{ inputs.token }}
+        path: MicroServices/PaymentService
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout ResourceManagementCore
+      if: ${{ inputs.include_resource_management == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/ResourceManagementCore
+        token: ${{ inputs.token }}
+        path: MicroServices/ResourceManagementCore
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SaasIntegration
+      if: ${{ inputs.include_saas_integration == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/SaasIntegrationService
+        token: ${{ inputs.token }}
+        path: MicroServices/SaasIntegration
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout EHC-MW
+      if: ${{ inputs.include_ehc_mw == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/EHC-MW
+        token: ${{ inputs.token }}
+        path: MiddleWares/EHC-MW
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout JazanMW
+      if: ${{ inputs.include_jazan_mw == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/JazanMW
+        token: ${{ inputs.token }}
+        path: MiddleWares/JazanMW
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SaasMiddleWare
+      if: ${{ inputs.include_saas_middleware == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/SaasMiddleWare
+        token: ${{ inputs.token }}
+        path: SaasMiddleWare
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SassPlatform
+      if: ${{ inputs.include_saas_platform == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/SaasPlatform
+        token: ${{ inputs.token }}
+        path: SassPlatform
+        ref: ${{ inputs.ref }}
+
+    - name: Checkout SharedClassLibs
+      if: ${{ inputs.include_shared_class_libs == 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: Khz-DevOps/SharedClassLibs
+        token: ${{ inputs.token }}
+        path: SharedClassLibs
         ref: ${{ inputs.ref }}
