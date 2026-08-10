@@ -209,7 +209,7 @@ runs:
       if: ${{ inputs.include_saas_integration == 'true' }}
       uses: actions/checkout@v7
       with:
-        repository: Khz-DevOps/SaasIntegrationService
+        repository: Khz-DevOps/SaasIntegration
         token: ${{ inputs.token }}
         path: MicroServices/SaasIntegration
         ref: ${{ inputs.ref }}
