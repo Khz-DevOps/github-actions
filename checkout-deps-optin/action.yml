@@ -81,7 +81,7 @@ runs:
   steps:
     - name: Checkout Contact-Center-Accounts
       if: ${{ inputs.include_contact_center_accounts == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/contact-center-accounts
         token: ${{ inputs.token }}
@@ -90,7 +90,7 @@ runs:
 
     - name: Checkout ChannelGateway
       if: ${{ inputs.include_channel_gateway == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/ChannelGateway
         token: ${{ inputs.token }}
@@ -99,7 +99,7 @@ runs:
 
     - name: Checkout SaasGateway
       if: ${{ inputs.include_saas_gateway == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/SaasGateway
         token: ${{ inputs.token }}
@@ -108,7 +108,7 @@ runs:
 
     - name: Checkout WebOrderGateway
       if: ${{ inputs.include_weborder_gateway == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/WebOrderGateway
         token: ${{ inputs.token }}
@@ -117,7 +117,7 @@ runs:
 
     - name: Checkout agent-context
       if: ${{ inputs.include_agent_context == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/agent-context
         token: ${{ inputs.token }}
@@ -126,7 +126,7 @@ runs:
 
     - name: Checkout DockerInfra
       if: ${{ inputs.include_docker_infra == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/DockerInfra
         token: ${{ inputs.token }}
@@ -135,7 +135,7 @@ runs:
 
     - name: Checkout github-actions
       if: ${{ inputs.include_github_actions == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/github-actions
         token: ${{ inputs.token }}
@@ -144,7 +144,7 @@ runs:
 
     - name: Checkout RepoOps-Scripts
       if: ${{ inputs.include_repoops_scripts == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/RepoOps-Scripts
         token: ${{ inputs.token }}
@@ -153,7 +153,7 @@ runs:
 
     - name: Checkout ChatBotService
       if: ${{ inputs.include_chatbot == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/ChatBotService
         token: ${{ inputs.token }}
@@ -162,7 +162,7 @@ runs:
 
     - name: Checkout contact-center.web
       if: ${{ inputs.include_contact_center_web == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/contact-center.web
         token: ${{ inputs.token }}
@@ -171,7 +171,7 @@ runs:
 
     - name: Checkout DeliveryService
       if: ${{ inputs.include_delivery == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/DeliveryService
         token: ${{ inputs.token }}
@@ -180,7 +180,7 @@ runs:
 
     - name: Checkout LiveChat
       if: ${{ inputs.include_livechat == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/LiveChat
         token: ${{ inputs.token }}
@@ -189,7 +189,7 @@ runs:
 
     - name: Checkout PaymentService
       if: ${{ inputs.include_payment == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/PaymentService
         token: ${{ inputs.token }}
@@ -198,7 +198,7 @@ runs:
 
     - name: Checkout ResourceManagementCore
       if: ${{ inputs.include_resource_management == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/ResourceManagementCore
         token: ${{ inputs.token }}
@@ -207,7 +207,7 @@ runs:
 
     - name: Checkout SaasIntegration
       if: ${{ inputs.include_saas_integration == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/SaasIntegrationService
         token: ${{ inputs.token }}
@@ -216,7 +216,7 @@ runs:
 
     - name: Checkout EHC-MW
       if: ${{ inputs.include_ehc_mw == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/EHC-MW
         token: ${{ inputs.token }}
@@ -225,7 +225,7 @@ runs:
 
     - name: Checkout JazanMW
       if: ${{ inputs.include_jazan_mw == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/JazanMW
         token: ${{ inputs.token }}
@@ -234,7 +234,7 @@ runs:
 
     - name: Checkout SaasMiddleWare
       if: ${{ inputs.include_saas_middleware == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/SaasMiddleWare
         token: ${{ inputs.token }}
@@ -243,7 +243,7 @@ runs:
 
     - name: Checkout SassPlatform
       if: ${{ inputs.include_saas_platform == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/SaasPlatform
         token: ${{ inputs.token }}
@@ -252,7 +252,7 @@ runs:
 
     - name: Checkout SharedClassLibs
       if: ${{ inputs.include_shared_class_libs == 'true' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         repository: Khz-DevOps/SharedClassLibs
         token: ${{ inputs.token }}
