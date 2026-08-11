@@ -200,9 +200,20 @@ runs:
 
         # Manifests are new files under distinct per-image directories, so a
         # concurrent build from another repo never touches the same path and
-        # the rebase always resolves cleanly.
-        for i in 1 2 3; do
-          git push && break
+        # the rebase always resolves cleanly. More attempts than
+        # docker-gitops-deploy uses: every service repo writes here, so
+        # contention is higher than for any single overlay.
+        for i in 1 2 3 4 5; do
+          if git push; then
+            exit 0
+          fi
           echo "Push attempt $i failed, rebasing..."
           git pull --rebase origin master
         done
+
+        # Deliberately fail rather than pass green with the manifest unpushed.
+        # An unrecorded image is one nobody can reproduce, and the whole point
+        # of this action is that the record is not optional -- a missing
+        # manifest should stop the deploy, not be discovered months later.
+        echo "::error::Could not push manifest after 5 attempts -- manifest NOT recorded"
+        exit 1
