@@ -1,0 +1,208 @@
+name: "Record Build Manifest"
+description: "Record the exact commit of every repo that went into this build, as JSON in RepoOps-Scripts/build-manifests"
+
+# A master build is tagged master-<sha7>, which pins THIS repo only. The
+# dependency repos come from checkout-deps-optin, whose single `ref` input
+# defaults to master -- so the tag says nothing about which dependency commits
+# were compiled in. This action records them, making the image reproducible
+# from the tag alone (and after the image is gone from the registry).
+#
+# Run it as the LAST step of the build job, after docker-build-push, so that
+# only images that actually pushed get a manifest.
+
+inputs:
+  token:
+    description: "GitHub PAT with push access to Khz-DevOps/RepoOps-Scripts"
+    required: true
+  compose-file:
+    description: "Path to the docker-compose.yml that was built (same value passed to docker-build-push). Omit only when passing `image` instead."
+    required: false
+    default: ""
+  image:
+    description: "Image short name, for builds that bypass compose (e.g. cs-hermes-agent, which builds via docker/build-push-action). Space-separated for several. Ignored when compose-file is set."
+    required: false
+    default: ""
+  image_tag:
+    description: "Tag the images were pushed with (same value passed to docker-build-push)"
+    required: true
+  registry:
+    description: "Container registry host"
+    default: cr.alkhwarizmi.online
+
+runs:
+  using: "composite"
+  steps:
+    # Must run BEFORE RepoOps-Scripts is checked out, or the manifest repo's
+    # own clone shows up as a dependency of the build.
+    - name: Collect repo commits
+      id: collect
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Checkout dirs may not be owned by the shell user; without this every
+        # git call below fails with "detected dubious ownership".
+        git config --global --add safe.directory '*'
+
+        # Scan rather than read repos-index.json: every repo actions/checkout
+        # placed on the runner has a .git dir, so this records what WAS checked
+        # out rather than what could have been, and needs no edit when
+        # checkout-deps-optin gains a repo.
+        repos=$(
+          find . -maxdepth 4 -name .git -type d -prune \
+            | sed 's|/\.git$||; s|^\./||' \
+            | sort \
+            | while read -r d; do
+                # A repo checked out with no `path:` lands at the workspace
+                # root, where the sed above leaves an empty string.
+                [ -n "$d" ] || d="."
+                # fetch-depth:1 clones still resolve the true SHA.
+                sha=$(git -C "$d" rev-parse HEAD)
+                # "HEAD" when checkout was given a tag or SHA -- informational.
+                ref=$(git -C "$d" rev-parse --abbrev-ref HEAD)
+                url=$(git -C "$d" config --get remote.origin.url || echo "")
+                slug=$(printf '%s' "$url" | sed 's|^https://github.com/||; s|^git@github.com:||; s|\.git$||')
+                printf '%s\t%s\t%s\t%s\n' "$d" "$slug" "$sha" "$ref"
+              done \
+            | jq -Rn -c '[inputs | split("\t")
+                | {key: .[0], value: {repo: .[1], sha: .[2], ref: .[3]}}] | from_entries'
+        )
+
+        echo "Repos in this build:"
+        printf '%s' "$repos" | jq .
+
+        echo "repos<<REPOS_EOF" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "$repos"  >> "$GITHUB_OUTPUT"
+        echo "REPOS_EOF"        >> "$GITHUB_OUTPUT"
+
+    - name: Resolve built images
+      id: images
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        IMAGE: ${{ inputs.image }}
+        REGISTRY: ${{ inputs.registry }}
+      run: |
+        set -euo pipefail
+
+        if [ -n "$COMPOSE_FILE" ]; then
+          # Ask compose which images it builds rather than hardcoding a name --
+          # this is what makes multi-image repos (MessengerCore,
+          # contact-center.web) work with no per-repo configuration. Compose
+          # interpolates ${IMAGE_TAG} itself, so these are the exact pushed refs.
+          images=$(docker compose -f "$COMPOSE_FILE" config --format json \
+                     | jq -r '.services[].image // empty' | sort -u)
+        elif [ -n "$IMAGE" ]; then
+          # Builds that bypass compose (docker/build-push-action) name their
+          # image directly; normalise to the same registry/name:tag shape.
+          images=$(for i in $IMAGE; do
+                     case "$i" in
+                       */*) printf '%s:%s\n' "$i" "$IMAGE_TAG" ;;
+                       *)   printf '%s/%s:%s\n' "$REGISTRY" "$i" "$IMAGE_TAG" ;;
+                     esac
+                   done)
+        else
+          echo "::error::Pass either compose-file or image"
+          exit 1
+        fi
+
+        if [ -z "$images" ]; then
+          echo "::error::No images resolved for this build"
+          exit 1
+        fi
+
+        echo "Images built:"
+        printf '  %s\n' $images
+
+        echo "images<<IMAGES_EOF" >> "$GITHUB_OUTPUT"
+        printf '%s\n' "$images"   >> "$GITHUB_OUTPUT"
+        echo "IMAGES_EOF"         >> "$GITHUB_OUTPUT"
+
+    - name: Checkout RepoOps-Scripts
+      uses: actions/checkout@v7
+      with:
+        repository: Khz-DevOps/RepoOps-Scripts
+        token: ${{ inputs.token }}
+        path: RepoOps-Scripts
+
+    - name: Write manifests
+      id: write
+      shell: bash
+      env:
+        REPOS: ${{ steps.collect.outputs.repos }}
+        IMAGES: ${{ steps.images.outputs.images }}
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        REGISTRY: ${{ inputs.registry }}
+        COMPOSE_FILE: ${{ inputs.compose-file }}
+        SOURCE_REPO: ${{ github.repository }}
+        EVENT: ${{ github.event_name }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        set -euo pipefail
+        built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        written=""
+
+        while read -r image; do
+          [ -n "$image" ] || continue
+
+          # cr.alkhwarizmi.online/chatbotservice:master-a1b2c3d -> chatbotservice
+          # Test the prefix BEFORE stripping the tag: afterwards the value has
+          # changed for every image, so a "did the registry match?" comparison
+          # against $image would always pass and third-party images (postgres,
+          # redis) would land in build-manifests/ under a bogus name.
+          stripped=${image#"$REGISTRY"/}
+          if [ "$stripped" = "$image" ]; then
+            echo "::warning::Skipping $image -- not under $REGISTRY"
+            continue
+          fi
+          short=${stripped%%:*}
+
+          dir="RepoOps-Scripts/build-manifests/$short"
+          mkdir -p "$dir"
+
+          jq -n \
+            --arg image      "${image%%:*}" \
+            --arg tag        "$IMAGE_TAG" \
+            --arg builtAt    "$built_at" \
+            --arg event      "$EVENT" \
+            --arg sourceRepo "$SOURCE_REPO" \
+            --arg run        "$RUN_URL" \
+            --arg compose    "$COMPOSE_FILE" \
+            --argjson repos  "$REPOS" \
+            '{schema: 1, image: $image, tag: $tag, builtAt: $builtAt, event: $event,
+              sourceRepo: $sourceRepo, workflowRun: $run, composeFile: $compose,
+              repos: $repos}' > "$dir/${IMAGE_TAG}.json"
+
+          echo "Wrote build-manifests/$short/${IMAGE_TAG}.json"
+          written="$written $short"
+        done <<< "$IMAGES"
+
+        echo "written=${written# }" >> "$GITHUB_OUTPUT"
+
+    - name: Commit and push
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ inputs.image_tag }}
+        WRITTEN: ${{ steps.write.outputs.written }}
+      run: |
+        set -euo pipefail
+        cd RepoOps-Scripts
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git add build-manifests/
+
+        # A re-run of an identical build produces byte-identical JSON except
+        # for builtAt, so this only no-ops on a true repeat.
+        git diff --staged --quiet && echo "No manifest changes" && exit 0
+
+        git commit -m "manifest:${WRITTEN:+ }${WRITTEN} → ${IMAGE_TAG}"
+
+        # Manifests are new files under distinct per-image directories, so a
+        # concurrent build from another repo never touches the same path and
+        # the rebase always resolves cleanly.
+        for i in 1 2 3; do
+          git push && break
+          echo "Push attempt $i failed, rebasing..."
+          git pull --rebase origin master
+        done
