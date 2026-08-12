@@ -15,7 +15,12 @@ inputs:
     description: "GitHub PAT with push access to Khz-DevOps/RepoOps-Scripts"
     required: true
   compose-file:
-    description: "Path to the docker-compose.yml that was built (same value passed to docker-build-push). Omit only when passing `image` instead."
+    description: >
+      Path to the docker-compose.yml that was built (same value passed to
+      docker-build-push). Accepts several paths, one per line, for workflows
+      that build multiple compose files in one job -- one invocation then
+      writes every manifest in a single commit instead of cloning, committing
+      and pushing once per image. Omit only when passing `image` instead.
     required: false
     default: ""
   image:
@@ -86,20 +91,32 @@ runs:
       run: |
         set -euo pipefail
 
+        # Each output line is "<compose-file><TAB><image-ref>" so the manifest
+        # can record which compose file produced which image even when several
+        # are passed at once.
         if [ -n "$COMPOSE_FILE" ]; then
-          # Ask compose which images it builds rather than hardcoding a name --
-          # this is what makes multi-image repos (MessengerCore,
-          # contact-center.web) work with no per-repo configuration. Compose
-          # interpolates ${IMAGE_TAG} itself, so these are the exact pushed refs.
-          images=$(docker compose -f "$COMPOSE_FILE" config --format json \
-                     | jq -r '.services[].image // empty' | sort -u)
+          images=$(
+            printf '%s\n' "$COMPOSE_FILE" | while read -r cf; do
+              [ -n "$cf" ] || continue
+              if [ ! -f "$cf" ]; then
+                echo "::error::compose-file not found: $cf" >&2
+                exit 1
+              fi
+              # Ask compose which images it builds rather than hardcoding a
+              # name -- this is what makes multi-image repos work with no
+              # per-repo configuration. Compose interpolates ${IMAGE_TAG}
+              # itself, so these are the exact pushed refs.
+              docker compose -f "$cf" config --format json \
+                | jq -r --arg cf "$cf" '.services[].image // empty | "\($cf)\t\(.)"'
+            done | sort -u
+          )
         elif [ -n "$IMAGE" ]; then
           # Builds that bypass compose (docker/build-push-action) name their
           # image directly; normalise to the same registry/name:tag shape.
           images=$(for i in $IMAGE; do
                      case "$i" in
-                       */*) printf '%s:%s\n' "$i" "$IMAGE_TAG" ;;
-                       *)   printf '%s/%s:%s\n' "$REGISTRY" "$i" "$IMAGE_TAG" ;;
+                       */*) printf '\t%s:%s\n' "$i" "$IMAGE_TAG" ;;
+                       *)   printf '\t%s/%s:%s\n' "$REGISTRY" "$i" "$IMAGE_TAG" ;;
                      esac
                    done)
         else
@@ -113,7 +130,7 @@ runs:
         fi
 
         echo "Images built:"
-        printf '  %s\n' $images
+        printf '%s\n' "$images" | cut -f2 | sed 's/^/  /'
 
         echo "images<<IMAGES_EOF" >> "$GITHUB_OUTPUT"
         printf '%s\n' "$images"   >> "$GITHUB_OUTPUT"
@@ -134,7 +151,6 @@ runs:
         IMAGES: ${{ steps.images.outputs.images }}
         IMAGE_TAG: ${{ inputs.image_tag }}
         REGISTRY: ${{ inputs.registry }}
-        COMPOSE_FILE: ${{ inputs.compose-file }}
         SOURCE_REPO: ${{ github.repository }}
         EVENT: ${{ github.event_name }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -143,7 +159,7 @@ runs:
         built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         written=""
 
-        while read -r image; do
+        while IFS=$'\t' read -r compose image; do
           [ -n "$image" ] || continue
 
           # cr.alkhwarizmi.online/chatbotservice:master-a1b2c3d -> chatbotservice
@@ -168,7 +184,7 @@ runs:
             --arg event      "$EVENT" \
             --arg sourceRepo "$SOURCE_REPO" \
             --arg run        "$RUN_URL" \
-            --arg compose    "$COMPOSE_FILE" \
+            --arg compose    "$compose" \
             --argjson repos  "$REPOS" \
             '{schema: 1, image: $image, tag: $tag, builtAt: $builtAt, event: $event,
               sourceRepo: $sourceRepo, workflowRun: $run, composeFile: $compose,
