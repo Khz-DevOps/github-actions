@@ -24,6 +24,14 @@ inputs:
     required: false
     default: ""
 
+  cache_registry:
+    description: >-
+      Host of a separate registry used only for BuildKit cache (cache_from/cache_to
+      in the compose file). Logged in with the same credentials. Empty = cache lives
+      on `registry`, so no extra login is needed.
+    required: false
+    default: ""
+
 
 runs:
   using: "composite"
@@ -37,6 +45,17 @@ runs:
       uses: docker/login-action@v4
       with:
         registry: ${{ inputs.registry }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+
+    # A cache registry on a different host needs its own credentials in the
+    # buildx container, or cache_to fails with 401 and the build silently loses
+    # its cache (BuildKit never fails a build over a cache write).
+    - name: Docker login (cache registry)
+      if: inputs.cache_registry != ''
+      uses: docker/login-action@v4
+      with:
+        registry: ${{ inputs.cache_registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
 
