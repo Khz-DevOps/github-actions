@@ -41,17 +41,16 @@ runs:
         password: ${{ inputs.password }}
 
     # COMPOSE_BAKE routes the build through buildx bake, which is what honours
-    # cache_from/cache_to on a compose service. Compose marks the bake targets
-    # as loaded, so the images land in the local store for the push step.
-    - name: Build
+    # cache_from/cache_to on a compose service.
+    #
+    # --push uploads straight from the buildx container. A separate `compose push`
+    # step would instead force every image to be exported into the local Docker
+    # store first, purely so the push could find it -- measured at ~84s of the
+    # 225s build on Monitor-System, for images that are then immediately re-packed
+    # and uploaded. Building and pushing in one invocation skips that round trip.
+    - name: Build and push
       shell: bash
-      run: docker compose -f ${{ inputs.compose-file }} build --progress=plain ${{ inputs.services }}
+      run: docker compose -f ${{ inputs.compose-file }} build --progress=plain --push ${{ inputs.services }}
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
         COMPOSE_BAKE: "true"
-
-    - name: Push
-      shell: bash
-      run: docker compose -f ${{ inputs.compose-file }} push ${{ inputs.services }}
-      env:
-        IMAGE_TAG: ${{ inputs.image_tag }}
