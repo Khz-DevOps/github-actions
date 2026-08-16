@@ -41,6 +41,13 @@ runs:
     - name: Set up Buildx
       uses: docker/setup-buildx-action@v3
 
+    # Exports ACTIONS_RUNTIME_TOKEN / ACTIONS_CACHE_URL into the job env, which
+    # `cache_to: type=gha` needs. docker/build-push-action injects these itself;
+    # bake invoked from a plain shell step does not, so a compose file using
+    # type=gha silently fails to export without this. No-op for other cache types.
+    - name: Expose GitHub Actions runtime for type=gha cache
+      uses: crazy-max/ghaction-github-runtime@v3
+
     - name: Docker login
       uses: docker/login-action@v4
       with:
