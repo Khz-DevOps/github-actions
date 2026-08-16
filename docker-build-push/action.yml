@@ -64,8 +64,13 @@ runs:
     # also export each image into the local Docker store. That export was measured
     # at ~47s of a 173s build on Monitor-System -- images unpacked to disk and then
     # immediately re-packed for upload, for no one to read.
+    #
+    # --allow=fs.read is required because these compose files use `context: ../..`
+    # to reach the monorepo root, which escapes the compose file's own directory.
+    # bake refuses to read outside that directory without an explicit grant;
+    # `compose build` allowed it silently.
     - name: Build and push
       shell: bash
-      run: docker buildx bake -f ${{ inputs.compose-file }} --progress=plain --push ${{ inputs.services }}
+      run: docker buildx bake -f ${{ inputs.compose-file }} --allow=fs.read=* --progress=plain --push ${{ inputs.services }}
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
