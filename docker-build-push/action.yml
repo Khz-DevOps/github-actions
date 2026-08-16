@@ -69,8 +69,15 @@ runs:
     # to reach the monorepo root, which escapes the compose file's own directory.
     # bake refuses to read outside that directory without an explicit grant;
     # `compose build` allowed it silently.
+    #
+    # bake resolves `context:` relative to the working directory, while compose
+    # resolves it relative to the compose file. Running from the compose file's
+    # own directory makes `context: ../..` mean the same thing to both.
     - name: Build and push
       shell: bash
-      run: docker buildx bake -f ${{ inputs.compose-file }} --allow=fs.read=* --progress=plain --push ${{ inputs.services }}
+      run: |
+        cd "$(dirname "${{ inputs.compose-file }}")"
+        docker buildx bake -f "$(basename "${{ inputs.compose-file }}")" \
+          --allow=fs.read=* --progress=plain --push ${{ inputs.services }}
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
