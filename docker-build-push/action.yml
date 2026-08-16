@@ -19,10 +19,20 @@ inputs:
     description: "Registry password"
     required: true
 
+  services:
+    description: "Space-separated compose services to build/push. Empty = all services."
+    required: false
+    default: ""
+
 
 runs:
   using: "composite"
   steps:
+    # docker-container driver is required for `cache_to: type=registry` in the
+    # compose file; the default docker driver cannot export a cache.
+    - name: Set up Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Docker login
       uses: docker/login-action@v4
       with:
@@ -30,14 +40,18 @@ runs:
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
 
+    # COMPOSE_BAKE routes the build through buildx bake, which is what honours
+    # cache_from/cache_to on a compose service. Compose marks the bake targets
+    # as loaded, so the images land in the local store for the push step.
     - name: Build
       shell: bash
-      run: docker compose -f ${{ inputs.compose-file }} build --progress=plain
+      run: docker compose -f ${{ inputs.compose-file }} build --progress=plain ${{ inputs.services }}
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
+        COMPOSE_BAKE: "true"
 
     - name: Push
       shell: bash
-      run: docker compose -f ${{ inputs.compose-file }} push
+      run: docker compose -f ${{ inputs.compose-file }} push ${{ inputs.services }}
       env:
         IMAGE_TAG: ${{ inputs.image_tag }}
