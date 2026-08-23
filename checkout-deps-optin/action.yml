@@ -52,7 +52,7 @@ inputs:
     description: "Include PaymentService (MicroServices/PaymentService)"
     default: "false"
   include_resource_management:
-    description: "Include ResourceManagementCore (MicroServices/ResourceManagementCore)"
+    description: "Include ResourceManagement (MicroServices/ResourceManagement)"
     default: "false"
   include_saas_integration:
     description: "Include SaasIntegration (MicroServices/SaasIntegration)"
@@ -196,13 +196,13 @@ runs:
         path: MicroServices/PaymentService
         ref: ${{ inputs.ref }}
 
-    - name: Checkout ResourceManagementCore
+    - name: Checkout ResourceManagement
       if: ${{ inputs.include_resource_management == 'true' }}
       uses: actions/checkout@v7
       with:
-        repository: Khz-DevOps/ResourceManagementCore
+        repository: Khz-DevOps/ResourceManagement
         token: ${{ inputs.token }}
-        path: MicroServices/ResourceManagementCore
+        path: MicroServices/ResourceManagement
         ref: ${{ inputs.ref }}
 
     - name: Checkout SaasIntegration
