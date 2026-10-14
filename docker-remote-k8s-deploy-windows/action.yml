@@ -13,12 +13,12 @@ inputs:
 
   overlay_dir:
     required: false
-    description: "Overlay path relative to repo_dir (e.g. k8s/overlays/aws-eks)"
+    description: "Overlay path relative to repo_dir (e.g. k8s/overlays/aws-test)"
     default: "k8s/overlays/aws-test"
 
   namespace:
     required: false
-    description: "Kubernetes namespace (e.g. apps-aws-eks)"
+    description: "Kubernetes namespace (e.g. apps-aws-test)"
     default: "apps-aws-test"
 
   image_name:
