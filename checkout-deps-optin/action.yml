@@ -16,9 +16,6 @@ inputs:
   include_channel_gateway:
     description: "Include ChannelGateway (Gateways/ChannelGateway)"
     default: "false"
-  include_saas_gateway:
-    description: "Include SaasGateway (Gateways/SaasGateway)"
-    default: "false"
   include_weborder_gateway:
     description: "Include WebOrderGateway (Gateways/WebOrderGateway)"
     default: "false"
@@ -95,15 +92,6 @@ runs:
         repository: Khz-DevOps/ChannelGateway
         token: ${{ inputs.token }}
         path: Gateways/ChannelGateway
-        ref: ${{ inputs.ref }}
-
-    - name: Checkout SaasGateway
-      if: ${{ inputs.include_saas_gateway == 'true' }}
-      uses: actions/checkout@v7
-      with:
-        repository: Khz-DevOps/SaasGateway
-        token: ${{ inputs.token }}
-        path: Gateways/SaasGateway
         ref: ${{ inputs.ref }}
 
     - name: Checkout WebOrderGateway
